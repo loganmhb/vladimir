@@ -86,6 +86,18 @@
            (bigint halfmoves)
            (bigint fullmoves))))
 
+(defn square
+  "Convenience function for accessing the contents of a particular square."
+  [game [rank file]]
+  (((:board game) rank) file))
+
+(defn update-square
+  "Return a modified game with the contents of the given square updated."
+  [game [rank file] new-square]
+  (assoc game :board
+         (assoc (:board game) rank
+                (assoc ((:board game) rank) file new-square))))
+
 ;; Moves are stored as records. from and to fields should have vectors
 ;; of [rank file] indexed 0-7.
 
@@ -161,3 +173,43 @@
                (when piece
                  (if (= (:color piece) (:to-move game))
                    (concat moves (generate-piece-moves game piece rank file))))))))
+
+(defn alg-to-coord
+  "Takes an algebraic square coordinate and converts it to [rank file] indices."
+  [alg]
+  [(- (read-string (str (last alg))) 1)
+   (.indexOf "abcdefgh" (str (first alg)))])
+
+(defn move-from-alg [game alg]
+  (let [from (alg-to-coord (subs alg 0 2))
+        to   (alg-to-coord (subs alg 2 4))
+        promote (if (= (count alg) 5) (last alg) nil)]
+    (Move. (((:board game) (first from)) (last from))
+           from
+           to
+           (if (((:board game) (first to)) (last to))
+             true
+             false))))
+
+(defn make-move
+  "Returns the game after making the provided Move."
+  [game move]
+  (let [new-game game]
+    (-> (update-square new-game (:to move) (:piece move))
+        (update-square (:from move) nil))))
+
+(defn make-moves
+  "Given a sequence of moves, executes them sequentially."
+  [game moves]
+  (reduce make-move (cons game moves)))
+
+(defn make-alg-move
+  "Returns the game resulting from making the specified move in the provided game."
+  [game alg]
+  (make-move game (move-from-alg game alg)))
+
+(defn make-alg-moves
+  "Returns the game object created by making all of the moves in the vector
+   (in long algebraic format)."
+  [game moves]
+  (make-moves game (map #(move-from-alg game %) moves)))
