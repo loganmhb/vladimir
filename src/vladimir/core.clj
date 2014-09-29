@@ -44,7 +44,7 @@
                       "uci" (do (send-id state)
                                 (setup-engine state))
                       "isready" (println "readyok")
-                      "setoption" (set-option input)
+                      "setoption" (set-option input state)
                       "ucinewgame" (new-game state)
                       "position" (set-position input state)
                       "go")]
