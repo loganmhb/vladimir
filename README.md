@@ -1,20 +1,19 @@
 # vladimir
 
-FIXME: description
+Vladimir is a work-in-progress chess engine.
 
 ## Installation
 
-Download from http://example.com/FIXME.
+Clone it, fork it, bop it, etc. But, maybe, you know, in a little
+while. Not yet.
 
 ## Usage
 
-FIXME: explanation
-
-    $ java -jar vladimir-0.1.0-standalone.jar [args]
+Right now Vladimir can be seen, but not used.
 
 ## Options
 
-FIXME: listing of options this app accepts.
+None to date. Eventually, maybe different interfaces.
 
 ## Examples
 
@@ -24,13 +23,6 @@ FIXME: listing of options this app accepts.
 
 ...
 
-### Any Other Sections
-### That You Think
-### Might be Useful
-
 ## License
 
-Copyright © 2014 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Eclipse Public License version 1.0.
