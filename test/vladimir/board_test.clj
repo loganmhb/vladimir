@@ -1,0 +1,3 @@
+(ns vladimir.test.board)
+
+()
