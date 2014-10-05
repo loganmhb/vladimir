@@ -179,7 +179,9 @@
   [(- (read-string (str (last alg))) 1)
    (.indexOf "abcdefgh" (str (first alg)))])
 
-(defn move-from-alg [game alg]
+(defn move-from-alg
+  "Takes a move in long algebraic form and returns it as a Move record."
+  [game alg]
   (let [from (alg-to-coord (subs alg 0 2))
         to   (alg-to-coord (subs alg 2 4))
         promote (if (= (count alg) 5) (last alg) nil)]

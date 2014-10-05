@@ -47,5 +47,7 @@
                       "setoption" (set-option input state)
                       "ucinewgame" (new-game state)
                       "position" (set-position input state)
-                      "go")]
+                      "go" "calculating..."
+                      "stop" "Here's a move."
+                      "quit" (System/exit 0))]
       (recur (read-line) new-state))))
