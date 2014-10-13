@@ -1,6 +1,7 @@
 (ns vladimir.core
   (:gen-class)
-  (:require [vladimir.board :refer [start-fen make-game make-alg-moves]]))
+  (:require [vladimir.board :refer [start-fen make-game]]
+            [vladimir.move-gen :refer [make-alg-moves]]))
 
 (defn send-id
   "Sends Vladimir's ID information as required by UCI protocol."
