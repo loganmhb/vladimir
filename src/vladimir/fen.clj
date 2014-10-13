@@ -11,7 +11,7 @@
   [board-string]
   (clojure.string/replace board-string #"[1-8]" #(apply str (repeat (bigint %1) "."))))
 
-(defn character-to-piece
+(defn char-to-piece
   "Defines character to piece equivalencies."
   [fen-char]
   (let [p (clojure.string/lower-case fen-char)]
@@ -24,11 +24,11 @@
    squares and pieces."
   [row]
   (let [parse-char
-        (fn [c] (if (character-to-piece c)
+        (fn [c] (if (char-to-piece c)
                   (piece :color (if (java.lang.Character/isUpperCase c)
                                     :white
                                     :black)
-                         :type (character-to-piece c))
+                         :type (char-to-piece c))
                   nil))]
     (vec (map parse-char row))))
 
