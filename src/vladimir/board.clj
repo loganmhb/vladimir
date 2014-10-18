@@ -13,15 +13,56 @@
 ;; squares. The vectors are constructed so that (0, 0) refers to a1
 ;; and (7, 7) to h8.
 
-(ns vladimir.board
-  (require [vladimir.fen :refer :all]))
+(ns vladimir.board)
+
+;; Type definitions
 
 (defrecord Game [board to-move castles en-passant halfmoves fullmoves])
+
+(defrecord Piece [color type])
+
+;; Basic functions and constants for interfacing with Forsyth-Edwards notation
+
+(def start-fen
+  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+
+(defn expand-fen
+  "Replaces numbers in FEN-style board with '.' to facilitate indexing"
+  [board-string]
+  (clojure.string/replace board-string #"[1-8]" #(apply str (repeat (bigint %1) "."))))
+
+(defn char-to-piece
+  "Defines character to piece equivalencies."
+  [fen-char]
+  (let [p (clojure.string/lower-case fen-char)]
+    (get {"k" :king, "q" :queen, "r" :rook, "b" :bishop, "n" :knight, "p" :pawn}
+         p
+         nil)))
+
+(defn parse-row
+  "Takes fen-encoded row and returns a vector describing it in terms of empty
+   squares and pieces."
+  [row]
+  (let [parse-char
+        (fn [c] (if (char-to-piece c)
+                  (piece :color (if (java.lang.Character/isUpperCase c)
+                                    :white
+                                    :black)
+                         :type (char-to-piece c))
+                  nil))]
+    (vec (map parse-char row))))
+
+(defn board-from-fen
+  "Converts part 1 of FEN string to array representation of the board."
+  [fen-part]
+  (vec (reverse (map parse-row
+                     (clojure.string/split (expand-fen fen-part) #"/")))))
 
 (defn piece
   "Create a map representing a piece."
   [& args]
-  (apply hash-map args))
+  (let [args (apply hash-map args)]
+    (Piece. (:color args) (:type args))))
 
 (defn legal-castles
   "Given FEN part 3, returns a LegalCastles record."
@@ -43,13 +84,11 @@
            (bigint fullmoves))))
 
 (defn square
-  "Convenience function for accessing the contents of a particular square."
+  "Utility function for accessing the contents of a particular square."
   [game [rank file]]
   (((:board game) rank) file))
 
 (defn update-square
   "Return a modified game with the contents of the given square updated."
-  [game [rank file] new-square]
-  (assoc game :board
-         (assoc (:board game) rank
-                (assoc ((:board game) rank) file new-square))))
+  [game [rank file] new-content]
+  (update-in game [:board rank file] (fn [x] new-content)))

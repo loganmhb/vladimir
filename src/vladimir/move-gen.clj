@@ -24,7 +24,9 @@
                           #(vector (dec %1) (inc %2))
                           #(vector (dec %1) (dec %2))]})
 
-(defn on-board? [[to-r to-f]]
+(defn on-board?
+  "Validates that coordinates exist."
+  [[to-r to-f]]
   (and (< to-f 8) (< to-r 8) (>= to-f 0) (>= to-r 0)))
 
 (defn valid-square?
@@ -91,23 +93,22 @@
                    (concat moves (generate-piece-moves game piece rank file))))))))
 
 (defn alg-to-rf
-  "Takes an algebraic square coordinate  (i.e. 'e6') and converts it to
-   [rank file] indices."
+  "Takes an algebraic square coordinate  (i.e. 'e6') and converts it to a vector of
+   [rank file] by index."
   [alg]
   [(- (read-string (str (last alg))) 1)
    (.indexOf "abcdefgh" (str (first alg)))])
 
-(defn move-from-alg [game alg]
+(defn move-from-alg
+  "Returns a Move record given an input game and algebraic coordinates."
+  [game alg]
   (let [from (alg-to-rf (subs alg 0 2))
         to   (alg-to-rf (subs alg 2 4))
-        promote (if (= (count alg) 5) (last alg) nil)]
-    (Move. (((:board game) (first from)) (last from))
-           from
-           to
-           (if (((:board game) (first to)) (last to))
-             true
-             false)
-           (if promote promote nil))))
+        promote-to (if (= (count alg) 5) (last alg) nil)]
+    (move :from from
+          :to to
+          :castle? (if ())
+          :promotion promote-to)))
 
 (defn make-move
   "Returns the game after making the provided Move."
