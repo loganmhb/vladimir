@@ -1,5 +1,5 @@
 (ns vladimir.move-gen
-  (:require [vladimir.board :refer [square]])
+  (:require [vladimir.board :refer [square update-square]])
   (:import vladimir.board.Game))
 
 ;; Moves are stored as records. :from and :to fields should have vectors
@@ -7,12 +7,12 @@
 
 (defrecord Move [from to castle? promotion])
 
-(defn move
+(defn create-move
   "Create a Move object."
   [& {:keys [from to castle? promotion] :or [castle? false promotion nil]}]
   (Move. from to castle? promotion))
 
-;; Transformation functions for moving slider pieces (queen is just
+;; Transformation functions for sliding slider pieces (queen is just
 ;; rook + bishop)
 
 (def transforms {:rook [#(vector (inc %1) %2)
@@ -50,7 +50,7 @@
       (if (valid-square? game [to-r to-f])
         (recur to-r
                to-f
-               (conj moves (move :from [rank file] :to [to-r to-f])))
+               (conj moves (create-move :from [rank file] :to [to-r to-f])))
         moves))))
 
 (defn king-moves [game piece rank file]
@@ -65,14 +65,19 @@
 (defn queen-moves [game piece rank file]
   (concat (map #(% game piece rank file) [rook-moves bishop-moves])))
 
-(defn knight-moves [game piece rank file])
+(defn knight-moves [game piece rank file]
+  (let [potentials (for [rmod [-2 -1 1 2]
+                          fmod [-2 -1 1 2]
+                         :when (not= (Math/abs rmod) (Math/abs fmod))]
+                     `(fn [r f] [(+ ~rmod r) (+ ~fmod f)]))]
+    (filter valid-square? (map #(% rank file) potentials))))
 
 (defn pawn-moves [game piece rank file])
 
 (defn generate-piece-moves
   "Generates a vector of all the Moves for a given Piece in a Game."
-  [game piece rank file]
-  (let [f (case (:type piece)
+  [game [rank file]]
+  (let [f (case (:type (square game [rank file]))
             :king king-moves
             :queen queen-moves
             :rook rook-moves
@@ -81,13 +86,13 @@
             :pawn pawn-moves)]
     (f game rank file)))
 
-(defn generate-moves
-  "Returns a vector of all legal moves in Move format."
+(defn generate-pseudolegal-moves
+  "Returns a vector of all pseudolegal moves in Move format, without checking for pins"
   [game]
   (let [moves []]
     (flatten (for [rank (range 8)
                    file (range 8)
-                   :let [piece (((:board game) rank) file)]]
+                   :let [piece (square game [rank file])]]
                (when piece
                  (if (= (:color piece) (:to-move game))
                    (concat moves (generate-piece-moves game piece rank file))))))))
@@ -105,17 +110,30 @@
   (let [from (alg-to-rf (subs alg 0 2))
         to   (alg-to-rf (subs alg 2 4))
         promote-to (if (= (count alg) 5) (last alg) nil)]
-    (move :from from
+    (create-move :from from
           :to to
-          :castle? (if ())
+          :castle? (if (= (:type (square game from))
+                          :king)
+                     (case (- (get from 1)
+                              (get to 1))
+                       2 :kside
+                       -2 :qside
+                       :else false)
+                     false)
           :promotion promote-to)))
+
+(defn update-castle-rights [game move])
+
+(defn update-en-passant-rights [game move])
 
 (defn make-move
   "Returns the game after making the provided Move."
   [game move]
   (let [new-game game]
     (-> (update-square new-game (:to move) (square game (:from move)))
-        (update-square (:from move) nil))))
+        (update-square (:from move) nil)
+        (update-castle-rights move)
+        (update-en-passant-rights move))))
 
 (defn make-moves
   "Given a sequence of moves, executes them sequentially."

@@ -13,13 +13,28 @@
 ;; squares. The vectors are constructed so that (0, 0) refers to a1
 ;; and (7, 7) to h8.
 
-(ns vladimir.board)
+(ns vladimir.board
+  (:gen-class))
 
 ;; Type definitions
 
 (defrecord Game [board to-move castles en-passant halfmoves fullmoves])
 
-(defrecord Piece [color type])
+(defrecord Piece [color type castle?])
+
+;; Constructor functions
+
+(defn create-piece
+  "Friendlier syntax for creating a Piece record."
+  [& {:keys [color type]}]
+  (Piece. color type))
+
+(defmacro create-game
+  "Likewise for game records."
+  [& args]
+  (let [args (apply hash-map args)]
+    `(Game. ~@(map #(% args)
+                   [:board :to-move :castles :en-passant :halfmoves :fullmoves]))))
 
 ;; Basic functions and constants for interfacing with Forsyth-Edwards notation
 
@@ -45,7 +60,7 @@
   [row]
   (let [parse-char
         (fn [c] (if (char-to-piece c)
-                  (piece :color (if (java.lang.Character/isUpperCase c)
+                  (create-piece :color (if (java.lang.Character/isUpperCase c)
                                     :white
                                     :black)
                          :type (char-to-piece c))
@@ -58,12 +73,6 @@
   (vec (reverse (map parse-row
                      (clojure.string/split (expand-fen fen-part) #"/")))))
 
-(defn piece
-  "Create a map representing a piece."
-  [& args]
-  (let [args (apply hash-map args)]
-    (Piece. (:color args) (:type args))))
-
 (defn legal-castles
   "Given FEN part 3, returns a LegalCastles record."
   [castles]
@@ -71,7 +80,7 @@
     {:white {:kside (scan #"K") :qside (scan #"Q")}
      :black {:kside (scan #"k") :qside (scan #"q")}}))
 
-(defn game 
+(defn game-from-fen 
   "Creates a game object given a FEN representation."
   [fen]
   (let [[board to-move castles en-passant halfmoves fullmoves]

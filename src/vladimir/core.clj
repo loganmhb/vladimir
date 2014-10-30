@@ -1,6 +1,6 @@
 (ns vladimir.core
   (:gen-class)
-  (:require [vladimir.board :refer [start-fen make-game]]
+  (:require [vladimir.board :refer [start-fen game-from-fen]]
             [vladimir.move-gen :refer [make-alg-moves]]))
 
 (defn send-id
@@ -30,7 +30,7 @@
   [cmd state]
   (let [[cmd pos & moves] (clojure.string/split cmd #" ")]
     (assoc state :position
-           (make-alg-moves (make-game (if (= pos "startpos") start-fen pos))
+           (make-alg-moves (game-from-fen (if (= pos "startpos") start-fen pos))
                            (rest moves)))))
 
 (defn -main
